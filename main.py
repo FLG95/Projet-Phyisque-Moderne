@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 
+import matplotlib
+matplotlib.use('TkAgg')
+
+
 def simulation(e):
     dt = 1E-7
     dx = 0.001
@@ -84,6 +88,8 @@ im = np.zeros(nx)
 im[:] = np.imag(cpt[:])
 
 it = 0
+
+
 for i in range(1, nt):
     if i % 2 != 0:
         b[1:-1] = im[1:-1]
@@ -127,3 +133,7 @@ plt.ylabel("Transmission T(E)")
 plt.title("Transmission en fonction de l’énergie (effet Ramsauer)")
 plt.grid(True)
 plt.show()
+
+
+
+#il faut prendre E > V0

@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
 
+import matplotlib
+matplotlib.use('TkAgg')
+
 start_time = time.time()
 
 def init():
