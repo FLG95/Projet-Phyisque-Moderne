@@ -11,6 +11,7 @@ def animate(j):
     line.set_data(o, final_density[j,:]) #Crée un graphique pour chaque densite sauvegarde
     return line,
 
+
 dt=1E-7
 dx=0.001
 nx=int(1/dx)*2
@@ -30,10 +31,10 @@ xc=0.6
 sigma=0.05
 normalisation=1/(math.sqrt(sigma*math.sqrt(math.pi)))
 wp_gauss = normalisation * np.exp(1j * k * x_array - ((x_array - xc) ** 2) / (2 * (sigma ** 2)))
-#wave packet Real part 
+#wave packet Real part
 wp_re=np.zeros(nx)
 wp_re[:]=np.real(wp_gauss[:])
-#wave packet Imaginary part 
+#wave packet Imaginary part
 wp_im=np.zeros(nx)
 wp_im[:]=np.imag(wp_gauss[:])
 
@@ -41,7 +42,8 @@ density = np.zeros((nt,nx))
 density[0,:] = np.absolute(wp_gauss[:]) ** 2
 
 final_density =np.zeros((n_frames,nx))
-#Algo devant retourner la densité de probabilité de présence de la particule à différents instants
+
+#Algo devant retourner la densité de probabilité de présence de la particule à différents instants
 
 plot_title = "E/Vo="+str(e)
 
