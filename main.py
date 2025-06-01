@@ -3,137 +3,125 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import time
-
 import matplotlib
+import os
+from scipy.linalg import eigh
 matplotlib.use('TkAgg')
 
+start_time = time.time()
 
-def simulation(e):
-    dt = 1E-7
-    dx = 0.001
-    nx = int(1 / dx) * 2
-    nt = 90000
-    nd = int(nt / 1000) + 1
-    s = dt / (dx ** 2)
-    xc = 0.6
-    sigma = 0.05
-    A = 1 / (math.sqrt(sigma * math.sqrt(math.pi)))
-    v0 = -4000
-    E = e * v0
-    k = math.sqrt(2 * abs(E))
+data_dir = "data"
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
 
-    o = np.linspace(0, (nx - 1) * dx, nx)
-    V = np.zeros(nx)
-    V[(o >= 0.8) & (o <= 0.9)] = v0
+def etats_stationnaires(dx, nx, V, n_states=5):
+    x = np.linspace(0, (nx - 1) * dx, nx)
 
-    cpt = A * np.exp(1j * k * o - ((o - xc) ** 2) / (2 * (sigma ** 2)))
-    densite = np.zeros((nt, nx))
-    densite[0, :] = np.absolute(cpt[:]) ** 2
-    re = np.real(cpt[:])
-    im = np.imag(cpt[:])
-    b = np.zeros(nx)
+    diag = np.full(nx, -2.0)
+    offdiag = np.full(nx - 1, 1.0)
+    T = (-1 / dx**2) * (np.diag(diag) + np.diag(offdiag, 1) + np.diag(offdiag, -1))
+    H = T + np.diag(V)
 
-    for i in range(1, nt):
-        if i % 2 != 0:
-            b[1:-1] = im[1:-1]
-            im[1:-1] = im[1:-1] + s * (re[2:] + re[:-2]) - 2 * re[1:-1] * (s + V[1:-1] * dt)
-            densite[i, 1:-1] = re[1:-1]**2 + im[1:-1]*b[1:-1]
-        else:
-            re[1:-1] = re[1:-1] - s * (im[2:] + im[:-2]) + 2 * im[1:-1] * (s + V[1:-1] * dt)
+    energies, states = eigh(H, subset_by_index=(0, n_states - 1))
 
-    # Transmission : densité à droite du puits / densité totale
-    zone_transmise = o > 1.1
-    T = np.sum(densite[-1, zone_transmise]) / np.sum(densite[-1, :])
+    plt.figure(figsize=(10,6))
+    for i in range(n_states):
+        psi = states[:, i]
+        psi = psi / np.sqrt(np.sum(psi**2) * dx)
+        plt.plot(x, psi**2 + energies[i], label=f"État {i} (E = {energies[i]:.2f})")
 
-    return T
+    plt.plot(x, V, 'k--', label='Potentiel V(x)')
+    plt.title("États stationnaires")
+    plt.xlabel("x")
+    plt.ylabel("Énergie / Densité de probabilité")
+    plt.legend()
+    plt.grid()
+    filepath = os.path.join(data_dir, "etats_stationnaires.png")
+    plt.savefig(filepath)
+    print(f"Graphique des états stationnaires exporté dans '{filepath}'")
+    plt.close()  # Fermer la figure pour ne pas afficher
 
-# Animation
 def init():
     line.set_data([], [])
     return line,
 
 def animate(j):
-    line.set_data(o, final_densite[j,:])  # Affiche la densité à chaque étape de l'animation
+    line.set_data(o, final_densite[j,:])
     return line,
 
-dt = 1E-7
-dx = 0.001
-nx = int(1 / dx) * 2
-nt = 90000
-nd = int(nt / 1000) + 1
-n_frame = nd
-s = dt / (dx ** 2)
-xc = 0.6
-sigma = 0.05
-A = 1 / (math.sqrt(sigma * math.sqrt(math.pi)))
-v0 = -4000
-e = 5
-E = e * v0
-k = math.sqrt(2 * abs(E))
+# --- Saisie paramètres ---
+if input("Voulez-vous utiliser des valeurs personnalisées ? oui - non : ") == 'oui':
+    dt = float(input("Valeur de dt (ref 1E-7) : "))
+    dx = float(input("Valeur de dx (ref 0.001) : "))
+    nt = int(input("Valeur de nt (ref 90000) : "))
+    nd = int(nt/1000)+1
+    xc = float(input("Valeur de xc (ref 0.6) : "))
+    sigma = float(input("Valeur de sigma (ref 0.05) : "))
+    v0 = float(input("Valeur de v0 (ref -4000) : "))
+    e = float(input("Valeur de e (ref 5) : "))
+else:
+    dt = 1E-7
+    dx = 0.001
+    nt = 90000
+    nd = int(nt/1000)+1
+    xc = 0.6
+    sigma = 0.05
+    v0 = -4000
+    e = 5
 
-o = np.zeros(nx)
-V = np.zeros(nx)
+nx = int(1/dx)*2
+n_frame = nd
+s = dt/(dx**2)
+A = 1/(math.sqrt(sigma*math.sqrt(math.pi)))
+E = e*v0
+k = math.sqrt(2*abs(E))
+
 o = np.linspace(0, (nx - 1) * dx, nx)
-V[(o >= 0.8) & (o <= 0.9)] = v0
+V = np.zeros(nx)
+V[(o >= 0.8) & (o<=0.9)] = v0
 
 cpt = A * np.exp(1j * k * o - ((o - xc) ** 2) / (2 * (sigma ** 2)))
-densite = np.zeros((nt, nx))
-densite[0, :] = np.absolute(cpt[:]) ** 2
-final_densite = np.zeros((n_frame, nx))
-re = np.zeros(nx)
-re[:] = np.real(cpt[:])
-
+densite = np.zeros((nt,nx))
+densite[0,:] = np.abs(cpt[:]) ** 2
+final_densite = np.zeros((n_frame,nx))
+re = np.real(cpt[:])
 b = np.zeros(nx)
-im = np.zeros(nx)
-im[:] = np.imag(cpt[:])
+im = np.imag(cpt[:])
 
 it = 0
-
-
 for i in range(1, nt):
     if i % 2 != 0:
         b[1:-1] = im[1:-1]
         im[1:-1] = im[1:-1] + s * (re[2:] + re[:-2]) - 2 * re[1:-1] * (s + V[1:-1] * dt)
-        densite[i, 1:-1] = re[1:-1]**2 + im[1:-1] * b[1:-1]
+        densite[i,1:-1] = re[1:-1]*re[1:-1] + im[1:-1]*b[1:-1]
     else:
         re[1:-1] = re[1:-1] - s * (im[2:] + im[:-2]) + 2 * im[1:-1] * (s + V[1:-1] * dt)
 
 for i in range(1, nt):
-    if (i - 1) % 1000 == 0:
+    if (i-1) % 1000 == 0:
         it += 1
         final_densite[it][:] = densite[i][:]
 
-# Tracé de l'animation
 plot_title = "Marche Ascendante avec E/Vo=" + str(e)
-fig = plt.figure()  # Initialise la figure principale
-line, = plt.plot([], [])
-plt.ylim(0, 13)
-plt.xlim(0, 2)
-plt.plot(o, V, label="Potentiel")
-plt.title(plot_title)
-plt.xlabel("x")
-plt.ylabel("Densité de probabilité de présence")
-plt.legend()
+
+fig, ax = plt.subplots()
+line, = ax.plot([], [], lw=2)
+ax.set_ylim(0, 13)
+ax.set_xlim(0, 2)
+ax.plot(o, V, label="Potentiel")
+ax.set_title(plot_title)
+ax.set_xlabel("x")
+ax.set_ylabel("Densité de probabilité de présence")
+ax.legend()
+
 
 ani = animation.FuncAnimation(fig, animate, init_func=init, frames=nd, blit=False, interval=100, repeat=False)
+ani.save(os.path.join(data_dir, "animation.gif"), fps=10)
 
-# Calcul de la transmission T(e)
-e_list = np.linspace(0.1, 5, 50)
-T_list = []
 
-for e in e_list:
-    print(f"Calcul pour E/V0 = {e}")
-    T = simulation(e)
-    T_list.append(T)
+print(f"Animation exportée dans data")
 
-# Tracer T(E)
-plt.plot(e_list, T_list)
-plt.xlabel("E / V0")
-plt.ylabel("Transmission T(E)")
-plt.title("Transmission en fonction de l’énergie (effet Ramsauer)")
-plt.grid(True)
 plt.show()
 
-
-
-#il faut prendre E > V0
+if input("Voulez-vous afficher les états stationnaires ? oui - non : ") == 'oui':
+    etats_stationnaires(dx, nx, V)
