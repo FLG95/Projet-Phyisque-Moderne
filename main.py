@@ -39,7 +39,7 @@ def etats_stationnaires(dx, nx, V, n_states=5):
     filepath = os.path.join(data_dir, "etats_stationnaires.png")
     plt.savefig(filepath)
     print(f"Graphique des états stationnaires exporté dans '{filepath}'")
-    plt.close()  # Fermer la figure pour ne pas afficher
+    plt.close()
 
 def init():
     line.set_data([], [])
@@ -49,7 +49,6 @@ def animate(j):
     line.set_data(o, final_densite[j,:])
     return line,
 
-# --- Saisie paramètres ---
 if input("Voulez-vous utiliser des valeurs personnalisées ? oui - non : ") == 'oui':
     dt = float(input("Valeur de dt (ref 1E-7) : "))
     dx = float(input("Valeur de dx (ref 0.001) : "))
@@ -113,7 +112,6 @@ ax.set_title(plot_title)
 ax.set_xlabel("x")
 ax.set_ylabel("Densité de probabilité de présence")
 ax.legend()
-
 
 ani = animation.FuncAnimation(fig, animate, init_func=init, frames=nd, blit=False, interval=100, repeat=False)
 ani.save(os.path.join(data_dir, "animation.gif"), fps=10)
