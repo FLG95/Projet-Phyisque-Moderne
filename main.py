@@ -17,35 +17,42 @@ if not os.path.exists(data_dir):
 
 
 
-def etats_stationnaires(dx, nx, n_states=5):
+def etats_stationnaires(dx, v0):
+
+    n_states = 5
 
     x = np.linspace(0, (nx - 1) * dx, nx)
+
+    V = np.zeros(nx)
+    V[(x >= 0.8) & (x<=0.9)] = v0
+
     diag = np.full(nx, -2.0)
     offdiag = np.full(nx - 1, 1.0)
-    T = (-1 / dx**2) * (np.diag(diag) + np.diag(offdiag, 1) + np.diag(offdiag, -1))
-    H = T + np.diag(V)
+    T = (-1 / dx ** 2) * (np.diag(diag) + np.diag(offdiag, 1) + np.diag(offdiag, -1))
+    H = T + np.diag(V) # hamiltonien
 
     energies, states = eigh(H, subset_by_index=(0, n_states - 1))
 
-    plt.figure(figsize=(10,6))
+
+    plt.figure(figsize=(10, 6))
     for i in range(n_states):
+
         psi = states[:, i]
-        psi = psi / np.sqrt(np.sum(psi**2) * dx)
-        plt.plot(x, psi**2 + energies[i], label=f"État {i} (E = {energies[i]:.2f})")
+        psi = psi / np.sqrt(np.sum(psi ** 2) * dx)
 
+        plt.plot(x, psi ** 2 + energies[i], label=f"État n={i+1} (E = {energies[i]:.2f})")
 
-    plt.xlim(0.75, 0.95)
-    plt.ylim(-4000, 100)
     plt.plot(x, V, 'k--', label='Potentiel V(x)')
     plt.title("États stationnaires")
     plt.xlabel("x")
     plt.ylabel("Énergie / Densité de probabilité")
-    plt.legend(loc='upper right')
+    plt.legend()
     plt.grid()
     filepath = os.path.join(data_dir, "etats_stationnaires.png")
     plt.savefig(filepath)
     print(f"Graphique des états stationnaires exporté dans '{filepath}'")
     plt.show()
+
 
 
 def init():
@@ -59,34 +66,31 @@ def animate(j):
 
 
 if input("Voulez-vous utiliser des valeurs personnalisées ? oui - non : ") == 'oui':
-    dt = float(input("Valeur de dt (ref 1E-7) : "))
-    dx = float(input("Valeur de dx (ref 0.001) : "))
-    nt = int(input("Valeur de nt (ref 90000) : "))
-    nd = int(nt / 1000) + 1
-    xc = float(input("Valeur de xc (ref 0.6) : "))
-    sigma = float(input("Valeur de sigma (ref 0.05) : "))
     v0 = float(input("Valeur de v0 (ref -4000) : "))
-    e = float(input("Valeur de e (ref 5) : "))
 else:
-    dt = 1E-7
-    dx = 0.001
-    nt = 90000
-    nd = int(nt / 1000) + 1
-    xc = 0.6
-    sigma = 0.05
     v0 = -4000
-    e = 5
 
-nx = int(1 / dx) * 2
+
+
+dt = 1E-7
+dx = 0.01
+nt = 90000
+xc = 0.6
+sigma = 0.05
+e = 5
+nd = int(nt / 1000) + 1
+
+
+nx = int(1/dx)*2
 n_frame = nd
-s = dt / (dx ** 2)
-A = 1 / (math.sqrt(sigma * math.sqrt(math.pi)))
-E = e * v0
-k = math.sqrt(2 * abs(E))
+s = dt/(dx**2)
+A = 1/(math.sqrt(sigma*math.sqrt(math.pi)))
+E = e*v0
+k = math.sqrt(2*abs(E))
 
 o = np.linspace(0, (nx - 1) * dx, nx)
 V = np.zeros(nx)
-V[(o >= 0.8) & (o <= 0.9)] = v0
+V[(o >= 0.8) & (o<=0.9)] = v0
 
 cpt = A * np.exp(1j * k * o - ((o - xc) ** 2) / (2 * (sigma ** 2)))
 densite = np.zeros((nt, nx))
@@ -96,7 +100,7 @@ re = np.real(cpt[:])
 b = np.zeros(nx)
 im = np.imag(cpt[:])
 
-
+'''
 for i in range(1, nt):
     if i % 2 != 0:
         b[1:-1] = im[1:-1]
@@ -128,7 +132,7 @@ ani.save(os.path.join(data_dir, "animation.gif"), fps=10)
 
 print(f"Animation exportée dans data")
 plt.show()
-
+'''
 
 if input("Voulez-vous afficher les états stationnaires ? oui - non : ") == 'oui':
-    etats_stationnaires(dx, nx)
+    etats_stationnaires(dx, v0)
