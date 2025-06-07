@@ -67,8 +67,11 @@ def animate(j):
 
 if input("Voulez-vous utiliser des valeurs personnalisées ? oui - non : ") == 'oui':
     v0 = float(input("Valeur de v0 (ref -4000) : "))
+    e = float(input("Valeur de e (ref 5) : "))
+
 else:
     v0 = -4000
+    e = 5
 
 
 
@@ -77,10 +80,9 @@ dx = 0.001
 nt = 90000
 xc = 0.6
 sigma = 0.05
-e = 5
+
+
 nd = int(nt / 1000) + 1
-
-
 nx = int(1/dx)*2
 n_frame = nd
 s = dt/(dx**2)
@@ -100,7 +102,6 @@ re = np.real(cpt[:])
 b = np.zeros(nx)
 im = np.imag(cpt[:])
 
-'''
 for i in range(1, nt):
     if i % 2 != 0:
         b[1:-1] = im[1:-1]
@@ -132,7 +133,7 @@ ani.save(os.path.join(data_dir, "animation.gif"), fps=10)
 
 print(f"Animation exportée dans data")
 plt.show()
-'''
+
 
 if input("Voulez-vous afficher les états stationnaires ? oui - non : ") == 'oui':
     etats_stationnaires(dx, v0)
